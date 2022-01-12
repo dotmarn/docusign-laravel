@@ -129,7 +129,7 @@ class DocusignController extends Controller
             'client_user_id' => $envelope_args['signer_client_id'],
             'recipient_id' => '1',
             'return_url' => $envelope_args['ds_return_url'],
-            'user_name' => 'shaiv', 'email' => 'shaivroy1@gmail.com'
+            'user_name' => 'ridwan', 'email' => 'ridwan@seamlesshr.com'
         ]);
 
         $results = $envelope_api->createRecipientView($args['account_id'], $envelope_id,$recipient_view_request);
@@ -167,7 +167,7 @@ class DocusignController extends Controller
         ]);
         # Create the signer recipient model
         $signer = new \DocuSign\eSign\Model\Signer([# The signer
-        'email' => 'shaivroy1@gmail.com', 'name' => 'shaiv',
+        'email' => 'ridwan@seamlesshr.com', 'name' => 'Ridwan',
             'recipient_id' => "1", 'routing_order' => "1",
             # Setting the client_user_id marks the signer as embedded
             'client_user_id' => $args['signer_client_id'],
@@ -183,7 +183,7 @@ class DocusignController extends Controller
         # Next, create the top level envelope definition and populate it.
 
         $envelope_definition = new \DocuSign\eSign\Model\EnvelopeDefinition([
-            'email_subject' => "Please sign this document sent from the CodeHunger",
+            'email_subject' => "Please sign this document sent from the SeamlessHR",
             'documents' => [$document],
             # The Recipients object wants arrays for each recipient type
             'recipients' => new \DocuSign\eSign\Model\Recipients(['signers' => [$signer]]),
@@ -233,6 +233,6 @@ class DocusignController extends Controller
         $file = $request->file('document');
         $path = $file->store('documents', 'public');
         Session::put('file_path', $path);
-        return back();
+        return redirect()->route('docusign')->with('success', 'Document uploaded successfully.');
     }
 }
