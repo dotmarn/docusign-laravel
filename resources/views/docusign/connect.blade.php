@@ -18,9 +18,6 @@
       </div>
     @endif
     <div class="card">
-      <div class="card-header">
-        CodeHunger Private Limited
-      </div>
       <div class="card-body">
         <h5 class="card-title">Docusign Tutorial</h5>
         <p class="card-text">Click the button below to connect your appication with docusign</p>
