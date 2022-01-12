@@ -39,6 +39,7 @@ class DocusignController extends Controller
      */
     public function connectDocusign()
     {
+        request()->session()->forget('file_path');
         try {
             $params = [
                 'response_type' => 'code',
@@ -230,6 +231,10 @@ class DocusignController extends Controller
 
     public function uploadDocument(Request $request)
     {
+        $this->validate($request, [
+            'document' => ['required', 'mimes:pdf']
+        ]);
+
         $file = $request->file('document');
         $path = $file->store('documents', 'public');
         Session::put('file_path', $path);
