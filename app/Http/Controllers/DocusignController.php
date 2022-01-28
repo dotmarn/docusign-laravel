@@ -175,10 +175,10 @@ class DocusignController extends Controller
         ]);
         # Create a sign_here tab (field on the document)
         $sign_here = new \DocuSign\eSign\Model\SignHere([# DocuSign SignHere field/tab
-            'anchor_string' => 'signature:',
+            'anchor_string' => 'applicant signature',
             'anchor_units' => 'pixels',
-            'anchor_y_offset' => '10',
-            'anchor_x_offset' => '20',
+            'anchor_y_offset' => '-20',
+            'anchor_x_offset' => '10',
         ]);
         # Add the tabs model (including the sign_here tab) to the signer
         # The Tabs object wants arrays of the different field/tab types
