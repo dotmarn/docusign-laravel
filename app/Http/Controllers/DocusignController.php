@@ -41,28 +41,28 @@ class DocusignController extends Controller
     public function connectDocusign()
     {
         request()->session()->forget('payload');
-        $auth = new JWTService();
-        $auth->login();
-        // try {
-        //     $params = [
-        //         'response_type' => 'code',
-        //         'scope' => 'impersonation signature',
-        //         'client_id' => env('DOCUSIGN_CLIENT_ID'),
-        //         'state' => 'a39fh23hnf23',
-        //         'redirect_uri' => route('docusign.callback'),
-        //     ];
-        //     $queryBuild = http_build_query($params);
+        // $auth = new JWTService();
+        // $auth->login();
+        try {
+            $params = [
+                'response_type' => 'code',
+                'scope' => 'impersonation signature',
+                'client_id' => env('DOCUSIGN_CLIENT_ID'),
+                'state' => 'a39fh23hnf23',
+                'redirect_uri' => route('docusign.callback'),
+            ];
+            $queryBuild = http_build_query($params);
 
-        //     // dd($queryBuild);
+            // dd($queryBuild);
 
-        //     $url = "https://account-d.docusign.com/oauth/auth?";
+            $url = "https://account-d.docusign.com/oauth/auth?";
 
-        //     $botUrl = $url . $queryBuild;
+            $botUrl = $url . $queryBuild;
 
-        //     return redirect()->to($botUrl);
-        // } catch (Exception $e) {
-        //     return redirect()->back()->with('error', 'Something Went wrong !');
-        // }
+            return redirect()->to($botUrl);
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Something Went wrong !');
+        }
     }
 
     /**
