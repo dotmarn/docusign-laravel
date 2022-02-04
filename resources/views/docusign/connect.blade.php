@@ -35,6 +35,16 @@
                             </div>
 
                             <div class="mb-5">
+                                <label for="">Name:</label>
+                                <input type="text" name="signer_name" class="border-2 w-full rounded-lg" id="" required>
+                            </div>
+
+                            <div class="mb-5">
+                                <label for="">Email:</label>
+                                <input type="text" name="signer_email" class="border-2 w-full rounded-lg" id="" required>
+                            </div>
+
+                            <div class="mb-5">
                                 <label for="">Anchor:</label>
                                 <input type="text" name="signature_anchor" class="border-2 w-full rounded-lg" id="" required>
                             </div>

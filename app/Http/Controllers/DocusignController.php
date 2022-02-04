@@ -41,28 +41,28 @@ class DocusignController extends Controller
     public function connectDocusign()
     {
         request()->session()->forget('payload');
-        // $auth = new JWTService();
-        // $auth->login();
-        try {
-            $params = [
-                'response_type' => 'code',
-                'scope' => 'impersonation signature',
-                'client_id' => env('DOCUSIGN_CLIENT_ID'),
-                'state' => 'a39fh23hnf23',
-                'redirect_uri' => route('docusign.callback'),
-            ];
-            $queryBuild = http_build_query($params);
+        $auth = new JWTService();
+        $auth->login();
+        // try {
+        //     $params = [
+        //         'response_type' => 'code',
+        //         'scope' => 'impersonation signature',
+        //         'client_id' => env('DOCUSIGN_CLIENT_ID'),
+        //         'state' => 'a39fh23hnf23',
+        //         'redirect_uri' => route('docusign.callback'),
+        //     ];
+        //     $queryBuild = http_build_query($params);
 
-            // dd($queryBuild);
+        //     // dd($queryBuild);
 
-            $url = "https://account-d.docusign.com/oauth/auth?";
+        //     $url = "https://account-d.docusign.com/oauth/auth?";
 
-            $botUrl = $url . $queryBuild;
+        //     $botUrl = $url . $queryBuild;
 
-            return redirect()->to($botUrl);
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Something Went wrong !');
-        }
+        //     return redirect()->to($botUrl);
+        // } catch (Exception $e) {
+        //     return redirect()->back()->with('error', 'Something Went wrong !');
+        // }
     }
 
     /**
@@ -109,6 +109,7 @@ class DocusignController extends Controller
     public function signDocument()
     {
         try{
+            $payload = Session::get('payload');
             $this->args = $this->getTemplateArgs();
 
             $args = $this->args;
@@ -134,7 +135,8 @@ class DocusignController extends Controller
                 'client_user_id' => $envelope_args['signer_client_id'],
                 'recipient_id' => '1',
                 'return_url' => $envelope_args['ds_return_url'],
-                'user_name' => 'ridwan', 'email' => 'ridwan@seamlesshr.com'
+                'user_name' => $payload->signer_name,
+                'email' => $payload->signer_email
             ]);
 
             $results = $envelope_api->createRecipientView($args['account_id'], $envelope_id,$recipient_view_request);
@@ -171,8 +173,8 @@ class DocusignController extends Controller
         ]);
         # Create the signer recipient model
         $signer = new \DocuSign\eSign\Model\Signer([# The signer
-            'email' => 'ridwan@seamlesshr.com',
-            'name' => 'Ridwan',
+            'email' => $payload->signer_email,
+            'name' => $payload->signer_name,
             'recipient_id' => "1",
             'routing_order' => "1",
             # Setting the client_user_id marks the signer as embedded
@@ -186,16 +188,16 @@ class DocusignController extends Controller
             'anchor_x_offset' => $payload->x_axis,
         ]);
 
-        $name_here = new \DocuSign\eSign\Model\SignHere([# DocuSign SignHere field/tab
-            'anchor_string' => 'applicant name',
-            'anchor_units' => 'pixels',
-            'anchor_y_offset' => $payload->y_axis,
-            'anchor_x_offset' => $payload->x_axis,
-        ]);
+        // $name_here = new \DocuSign\eSign\Model\SignHere([# DocuSign SignHere field/tab
+        //     'anchor_string' => 'applicant name',
+        //     'anchor_units' => 'pixels',
+        //     'anchor_y_offset' => $payload->y_axis,
+        //     'anchor_x_offset' => $payload->x_axis,
+        // ]);
         # Add the tabs model (including the sign_here tab) to the signer
         # The Tabs object wants arrays of the different field/tab types
         $signer->settabs(new \DocuSign\eSign\Model\Tabs([
-            'sign_here_tabs' => [$sign_here, $name_here]
+            'sign_here_tabs' => [$sign_here]
         ]));
         # Next, create the top level envelope definition and populate it.
 
@@ -248,6 +250,8 @@ class DocusignController extends Controller
     public function uploadDocument(Request $request)
     {
         $this->validate($request, [
+            'signer_name' => ['required', 'string'],
+            'signer_email' => ['required', 'string', 'email'],
             'document' => ['required', 'mimes:pdf'],
             'signature_anchor' => ['required', 'string'],
             'x_axis' => ['required'],
@@ -261,7 +265,9 @@ class DocusignController extends Controller
             'file_path' => $path,
             'anchor_string' => $request->signature_anchor,
             'x_axis' => $request->x_axis,
-            'y_axis' => $request->y_axis
+            'y_axis' => $request->y_axis,
+            'signer_name' => $request->signer_name,
+            'signer_email' => $request->signer_email
         ];
 
         Session::put('payload', $payload);
