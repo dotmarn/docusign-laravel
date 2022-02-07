@@ -10,16 +10,16 @@ use Session;
 
 class JWTService {
     const TOKEN_REPLACEMENT_IN_SECONDS = 600; # 10 minutes
-    protected static $expires_in;
-    protected static $access_token;
-    protected static $expiresInTimestamp;
-    protected static $account;
-    protected static $apiClient;
+    protected $expires_in;
+    protected $access_token;
+    protected $expiresInTimestamp;
+    protected $account;
+    protected $apiClient;
 
     public function __construct()
     {
         $config = new Configuration();
-        self::$apiClient = new ApiClient($config);
+        $this->apiClient = new ApiClient($config);
     }
 
     /**
@@ -28,8 +28,8 @@ class JWTService {
     protected function checkToken()
     {
         if (
-            is_null(self::$access_token)
-            || (time() +  self::TOKEN_REPLACEMENT_IN_SECONDS) > self::$expiresInTimestamp
+            is_null($this->access_token)
+            || (time() +  self::TOKEN_REPLACEMENT_IN_SECONDS) > $this->expiresInTimestamp
         ) {
             $this->login();
         }
@@ -40,23 +40,18 @@ class JWTService {
      */
     public function login()
     {
-        self::$access_token = $this->configureJwtAuthorizationFlowByKey();
+        $this->access_token = $this->configureJwtAuthorizationFlowByKey();
 
-        if (!self::$access_token) {
-            exit('Invalid JWT state');
-        } else {
+        $this->expiresInTimestamp = time() + $this->expires_in;
 
-            self::$expiresInTimestamp = time() + self::$expires_in;
-
-            if (is_null(self::$account)) {
-                self::$account = self::$apiClient->getUserInfo(self::$access_token->getAccessToken());
-            }
-
-            $redirectUrl = route('docusign');
-
-            $this->authCallback($redirectUrl);
-
+        if (is_null($this->account)) {
+            $this->account = $this->apiClient->getUserInfo($this->access_token->getAccessToken());
         }
+
+        $redirectUrl = route('docusign');
+
+        $this->authCallback($redirectUrl);
+
     }
 
     /**
@@ -64,16 +59,16 @@ class JWTService {
      */
     private function configureJwtAuthorizationFlowByKey()
     {
-        self::$apiClient->getOAuth()->setOAuthBasePath($GLOBALS['JWT_CONFIG']['authorization_server']);
-        $privateKey = file_get_contents(base_path().'/'.$GLOBALS['JWT_CONFIG']['private_key_file'], true);
+        $this->apiClient->getOAuth()->setOAuthBasePath(getenv('DOCUSIGN_AUTHORIZATION_SERVER'));
+        $privateKey = file_get_contents(base_path().'/'.getenv('DOCUSIGN_PRIVATE_KEY'), true);
 
         $scope = "signature impersonation";
 
         try {
 
-            $response = self::$apiClient->requestJWTUserToken(
+            $response = $this->apiClient->requestJWTUserToken(
                getenv('DOCUSIGN_CLIENT_ID'),
-               $GLOBALS['JWT_CONFIG']['ds_impersonated_user_id'],
+               getenv('DOCUSIGN_IMPERSONATED_USER_ID'),
                $privateKey,
                $scope,
             );
@@ -104,42 +99,36 @@ class JWTService {
      */
     function authCallback($redirectUrl): void
     {
-        try {
+        if (!$this->access_token) {
+            exit('Invalid JWT state');
+        } else {
+            try {
 
-            $_SESSION['ds_access_token'] = self::$access_token->getAccessToken();
-            $_SESSION['ds_refresh_token'] = self::$access_token->getRefreshToken();
-            $_SESSION['ds_expiration'] = time() + (self::$access_token->getExpiresIn() * 60); # expiration time.
+                // $_SESSION['ds_access_token'] = $this->access_token->getAccessToken();
+                // $_SESSION['ds_refresh_token'] = $this->access_token->getRefreshToken();
+                // $_SESSION['ds_expiration'] = time() + ($this->access_token->getExpiresIn() * 60); # expiration time.
 
-            $_SESSION['ds_user_name'] = self::$account[0]->getName();
-            $_SESSION['ds_user_email'] = self::$account[0]->getEmail();
+                // $_SESSION['ds_user_name'] = $this->account[0]->getName();
+                // $_SESSION['ds_user_email'] = $this->account[0]->getEmail();
 
-            $account_info = self::$account[0]->getAccounts();
-            $base_uri_suffix = '/restapi';
+                // $account_info = $this->account[0]->getAccounts();
+                // $base_uri_suffix = '/restapi';
 
-            $_SESSION['ds_account_id'] = $account_info[0]->getAccountId();
-            $_SESSION['ds_account_name'] = $account_info[0]->getAccountName();
-            $_SESSION['ds_base_path'] = $account_info[0]->getBaseUri() . $base_uri_suffix;
+                // $_SESSION['ds_account_id'] = $account_info[0]->getAccountId();
+                // $_SESSION['ds_account_name'] = $account_info[0]->getAccountName();
+                // $_SESSION['ds_base_path'] = $account_info[0]->getBaseUri() . $base_uri_suffix;
 
-            Session::put('docusign_auth_code', self::$access_token->getAccessToken());
-            Session::put('success', 'Docusign successfully connected');
+                Session::put('docusign_auth_code', $this->access_token->getAccessToken());
+                Session::put('success', 'Docusign successfully connected');
 
-            header('Location: '. $redirectUrl);
+                header('Location: '. $redirectUrl);
 
-        } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-            exit($e->getMessage());
+            } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+                exit($e->getMessage());
+            }
+
         }
 
     }
 
-    /**
-     * Set flash for the current user session
-     * @param $msg string
-     */
-    public function flash(string $msg): void
-    {
-        if (!isset($_SESSION['flash'])) {
-            $_SESSION['flash'] = [];
-        }
-        array_push($_SESSION['flash'], $msg);
-    }
 }
