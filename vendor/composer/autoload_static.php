@@ -528,6 +528,9 @@ class ComposerStaticIniteb49235a2b5008e8ef56284bd891de8d
     public static $classMap = array (
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
+        'App\\Facade\\AppUtils' => __DIR__ . '/../..' . '/app/Facade/AppUtils.php',
+        'App\\Helpers\\AppUtils' => __DIR__ . '/../..' . '/app/Helpers/AppUtils.php',
+        'App\\Http\\Controllers\\API\\DocusignController' => __DIR__ . '/../..' . '/app/Http/Controllers/API/DocusignController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\DocusignController' => __DIR__ . '/../..' . '/app/Http/Controllers/DocusignController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
@@ -545,6 +548,7 @@ class ComposerStaticIniteb49235a2b5008e8ef56284bd891de8d
         'App\\Providers\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/app/Providers/BroadcastServiceProvider.php',
         'App\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/app/Providers/EventServiceProvider.php',
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
+        'App\\Services\\JWTApiService' => __DIR__ . '/../..' . '/app/Services/JWTApiService.php',
         'App\\Services\\JWTService' => __DIR__ . '/../..' . '/app/Services/JWTService.php',
         'Asm89\\Stack\\Cors' => __DIR__ . '/..' . '/asm89/stack-cors/src/Cors.php',
         'Asm89\\Stack\\CorsService' => __DIR__ . '/..' . '/asm89/stack-cors/src/CorsService.php',

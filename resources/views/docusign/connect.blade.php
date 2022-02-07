@@ -50,13 +50,13 @@
                             </div>
 
                             <div class="mb-5">
-                                <label for="">X-axis:</label>
-                                <input type="text" name="x_axis" class="border-2 w-full rounded-lg" id="" required>
-                            </div>
-
-                            <div class="mb-5">
-                                <label for="">Y-axis:</label>
-                                <input type="text" name="y_axis" class="border-2 w-full rounded-lg" id="" required>
+                                <label for="">Position:</label>
+                                <select name="position" id="">
+                                    <option value="above">Above</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="right">Right</option>
+                                    <option value="left">Left</option>
+                                </select>
                             </div>
 
                             <div class="text-center mx-auto">

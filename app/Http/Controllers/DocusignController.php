@@ -154,6 +154,25 @@ class DocusignController extends Controller
         $payload = Session::get('payload');
         $demo_docs_path = asset('storage/'.$payload->file_path);
 
+        switch ($payload->position) {
+            case 'above':
+                $y_axis = "-5";
+                $x_axis = null;
+                break;
+            case 'left':
+                $y_axis = null;
+                $x_axis = "30";
+                break;
+            case 'right':
+                $y_axis = null;
+                $x_axis = "30";
+                break;
+            default:
+                $y_axis = null;
+                $x_axis = null;
+                break;
+        }
+
         $arrContextOptions=array(
             "ssl"=>array(
                 "verify_peer"=>false,
@@ -184,8 +203,8 @@ class DocusignController extends Controller
         $sign_here = new \DocuSign\eSign\Model\SignHere([# DocuSign SignHere field/tab
             'anchor_string' => $payload->anchor_string,
             'anchor_units' => 'pixels',
-            'anchor_y_offset' => $payload->y_axis,
-            'anchor_x_offset' => $payload->x_axis,
+            'anchor_y_offset' => $y_axis,
+            'anchor_x_offset' => $x_axis,
         ]);
 
         // $name_here = new \DocuSign\eSign\Model\SignHere([# DocuSign SignHere field/tab
@@ -254,8 +273,7 @@ class DocusignController extends Controller
             'signer_email' => ['required', 'string', 'email'],
             'document' => ['required', 'mimes:pdf'],
             'signature_anchor' => ['required', 'string'],
-            'x_axis' => ['required'],
-            'y_axis' => ['required']
+            'position' => ['nullable']
         ]);
 
         $file = $request->file('document');
@@ -264,10 +282,9 @@ class DocusignController extends Controller
         $payload = (object) [
             'file_path' => $path,
             'anchor_string' => $request->signature_anchor,
-            'x_axis' => $request->x_axis,
-            'y_axis' => $request->y_axis,
+            'position' => $request->position,
             'signer_name' => $request->signer_name,
-            'signer_email' => $request->signer_email
+            'signer_email' => $request->signer_email,
         ];
 
         Session::put('payload', $payload);

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Helpers\AppUtils;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->bind('app-utils', function ($app){
+            return new AppUtils;
+        });
     }
 }

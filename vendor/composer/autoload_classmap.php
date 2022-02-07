@@ -8,6 +8,9 @@ $baseDir = dirname($vendorDir);
 return array(
     'App\\Console\\Kernel' => $baseDir . '/app/Console/Kernel.php',
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
+    'App\\Facade\\AppUtils' => $baseDir . '/app/Facade/AppUtils.php',
+    'App\\Helpers\\AppUtils' => $baseDir . '/app/Helpers/AppUtils.php',
+    'App\\Http\\Controllers\\API\\DocusignController' => $baseDir . '/app/Http/Controllers/API/DocusignController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
     'App\\Http\\Controllers\\DocusignController' => $baseDir . '/app/Http/Controllers/DocusignController.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',
@@ -25,6 +28,7 @@ return array(
     'App\\Providers\\BroadcastServiceProvider' => $baseDir . '/app/Providers/BroadcastServiceProvider.php',
     'App\\Providers\\EventServiceProvider' => $baseDir . '/app/Providers/EventServiceProvider.php',
     'App\\Providers\\RouteServiceProvider' => $baseDir . '/app/Providers/RouteServiceProvider.php',
+    'App\\Services\\JWTApiService' => $baseDir . '/app/Services/JWTApiService.php',
     'App\\Services\\JWTService' => $baseDir . '/app/Services/JWTService.php',
     'Asm89\\Stack\\Cors' => $vendorDir . '/asm89/stack-cors/src/Cors.php',
     'Asm89\\Stack\\CorsService' => $vendorDir . '/asm89/stack-cors/src/CorsService.php',
