@@ -73,7 +73,7 @@ class DocusignController extends Controller
         $envelope_api = $this->getEnvelopeApi();
 
         try {
-            $results = $envelope_api->createEnvelope($args['account_id'], $envelope_definition);
+            $results = $envelope_api->createEnvelope($this->args['account_id'], $envelope_definition);
 
             return response()->json([
                 'status' => true,
