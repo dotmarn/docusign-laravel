@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Services\JWTApiService;
 use App\Http\Controllers\Controller;
+use App\Services\SignatureClientService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use DocuSign\eSign\Model\EnvelopeDefinition;
@@ -15,6 +16,7 @@ use DocuSign\eSign\Client\ApiClient;
 class DocusignController extends Controller
 {
     protected $jwtService;
+    protected $clientService;
     protected $token;
     private $args;
     private $x_axis;
@@ -31,6 +33,11 @@ class DocusignController extends Controller
         'document' => ['required', 'mimes:pdf'],
         'signature_anchor' => ['required', 'string'],
         'position' => ['required', 'string']
+    ];
+
+    private $doc = [
+        'document_id' => ['required', 'string'],
+        'envelope_id' => ['required', 'string']
     ];
 
     public function __construct()
@@ -70,7 +77,8 @@ class DocusignController extends Controller
     public function worker()
     {
         $envelope_definition = $this->make_envelope($this->args["envelope_args"]);
-        $envelope_api = $this->getEnvelopeApi();
+        $this->clientService = new SignatureClientService($this->args);
+        $envelope_api = $this->clientService->getEnvelopeApi();
 
         try {
             $results = $envelope_api->createEnvelope($this->args['account_id'], $envelope_definition);
@@ -128,14 +136,6 @@ class DocusignController extends Controller
             'routing_order' => "1"
         ]);
 
-        # create a cc recipient to receive a copy of the documents
-        $cc = new \DocuSign\eSign\Model\CarbonCopy([
-            'email' => $args['cc_email'],
-            'name' => $args['cc_name'],
-            'recipient_id' => "2",
-            'routing_order' => "2"
-        ]);
-
         $sign_here = new \DocuSign\eSign\Model\SignHere([
             'anchor_string' => $this->anchor,
             'anchor_units' => 'pixels',
@@ -152,8 +152,7 @@ class DocusignController extends Controller
 
         # Add the recipients to the envelope object
         $recipients = new \DocuSign\eSign\Model\Recipients([
-            'signers' => [$signer],
-            'carbon_copies' => [$cc]
+            'signers' => [$signer]
         ]);
 
         $envelope_definition->setRecipients($recipients);
@@ -163,22 +162,11 @@ class DocusignController extends Controller
         return $envelope_definition;
     }
 
-    public function getEnvelopeApi(): EnvelopesApi
-    {
-        $this->config = new Configuration();
-        $this->config->setHost($this->args['base_path']);
-        $this->config->addDefaultHeader('Authorization', 'Bearer ' . $this->args['ds_access_token']);
-        $this->apiClient = new ApiClient($this->config);
-
-        return new EnvelopesApi($this->apiClient);
-    }
-
-
     private function getTemplateArgs() : array
     {
         $envelope_args = [
             'cc_email' => 'ridwan@seamlesshr.com',
-            'cc_name' => 'Ridwan',
+            'cc_name' => '',
             'status' => 'sent'
         ];
 
@@ -216,6 +204,46 @@ class DocusignController extends Controller
                 $this->y_axis = null;
                 $this->x_axis = null;
                 break;
+        }
+
+    }
+
+    public function fetchDocument(Request $request)
+    {
+        $validator = Validator::make($request->all(), $this->doc);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Some fields are missing',
+                'data' => $validator->errors()
+            ], 422);
+        }
+
+        $this->access_token = $this->connectToDocusign();
+
+        $args = [
+            'ds_access_token' => $this->access_token,
+        ];
+
+        $this->clientService = new SignatureClientService($args);
+        $account_id = getenv('DOCUSIGN_ACCOUNT_ID');
+
+        $envelope_api = $this->clientService->getEnvelopeApi();
+        // get envelope info first
+        try {
+            $info = $envelope_api->getEnvelope($account_id, $request->envelope_id);
+            if ($info && ($info["status"] == "completed")) {
+                $temp_file = $envelope_api->getDocument($account_id,  $request->document_id, $request->envelope_id);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Document has not been signed',
+                    'data' => null
+                ], 422);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
         }
 
     }

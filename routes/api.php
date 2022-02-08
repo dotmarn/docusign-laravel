@@ -23,5 +23,7 @@ Route::group(['namespace' => '\App\Http\Controllers\API', 'prefix' => 'v1'], fun
 
     Route::post('sign-document', 'DocusignController@signDocumentViaEmail');
 
+    Route::post('fetch-document', 'DocusignController@fetchDocument');
+
 });
 
