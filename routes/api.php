@@ -25,5 +25,7 @@ Route::group(['namespace' => '\App\Http\Controllers\API', 'prefix' => 'v1'], fun
 
     Route::post('fetch-document', 'DocusignController@fetchDocument');
 
+    Route::get('webhook', 'DocusignController@webhook');
+
 });
 

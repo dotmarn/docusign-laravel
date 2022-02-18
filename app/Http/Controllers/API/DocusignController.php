@@ -82,17 +82,19 @@ class DocusignController extends Controller
 
         try {
             $results = $envelope_api->createEnvelope($this->args['account_id'], $envelope_definition);
+            $data['envelope_id'] = $results->getEnvelopeId();
 
             return response()->json([
                 'status' => true,
                 'message' => "Document signing initiated successfully",
-                'envelope_id' => $results->getEnvelopeId()
+                'data' => $data
             ], 200);
 
         } catch (ApiException $e) {
             return response()->json([
                 'status' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'data' => null
             ], 400);
         }
 
@@ -235,6 +237,73 @@ class DocusignController extends Controller
             $info = $envelope_api->getEnvelope($account_id, $request->envelope_id);
             if ($info && ($info["status"] == "completed")) {
                 $temp_file = $envelope_api->getDocument($account_id,  $request->document_id, $request->envelope_id);
+                 // fetch documents
+                 $documents = $envelope_api->listDocuments($account_id, $signing_request->envelope_id);
+
+                 $args['documents'] = $documents ? $documents : [];
+                 // get the splfl
+                 $actual_file = $envelope_api->getDocument($account_id,  $signing_request->document_id, $signing_request->envelope_id);
+
+                 $doc_item = false;
+
+                 foreach ($args['documents']['envelope_documents'] as $item) {
+                     if ($item['document_id'] == $signing_request->document_id) {
+                         $doc_item = $item;
+                         break;
+                     }
+                 }
+
+                 $doc_name = $doc_item['name'];
+                 $has_pdf_suffix = strtoupper(substr($doc_name, -4)) == '.PDF';
+                 $pdf_file = $has_pdf_suffix;
+
+                 if ($doc_item["type"] == "content" || ($doc_item["type"] == "summary" && ! $has_pdf_suffix)) {
+                     $doc_name .= ".pdf";
+                     $pdf_file = true;
+                 }
+
+                 if ($doc_item["type"] == "zip") {
+                     $doc_name .= ".zip";
+                 }
+
+                 if ($pdf_file) {
+                     $mimetype = 'application/pdf';
+                 } elseif ($doc_item["type"] == 'zip') {
+                     $mimetype = 'application/zip';
+                 } else {
+                     $mimetype = 'application/octet-stream';
+                 }
+
+                 header("Content-Type: {$mimetype}");
+                 header("Content-Disposition: attachment; filename=\"{$doc_name}\"");
+                 ob_clean();
+                 flush();
+
+                 $file_path = $actual_file->getPathname();
+
+                 $pdf = file_get_contents($file_path);
+
+                 $path = 'uploads/signed-documents/'.$doc_name;
+
+                 Storage::disk('public')->put($path, $pdf);
+
+                 $data = (object)[
+                     "envelope_id" => $signing_request->envelope_id,
+                     "recipient" => (object) [
+                         "email" => $signing_request->recipient_email,
+                         "full_name" => $signing_request->recipient_full_name
+                     ],
+                     "esignature_subscriber" => (object) [
+
+                     ],
+                     "path" => $path
+                 ];
+
+                 return AppUtils::setResponse(
+                     Response::HTTP_OK,
+                     $data,
+                     "Signed document retrieved successfully."
+                 );
             } else {
                 return response()->json([
                     'status' => false,
@@ -246,6 +315,11 @@ class DocusignController extends Controller
             //throw $th;
         }
 
+    }
+
+    public function webhook(Request $request)
+    {
+        dd($request);
     }
 
 }
